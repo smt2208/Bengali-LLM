@@ -1,6 +1,13 @@
 {
   "rewrites": [
-    { "source": "/",     "destination": "/frontend/pages/index.html" },
-    { "source": "/chat", "destination": "/frontend/pages/chat.html" }
-  ]
+    { "source": "/", "destination": "/frontend/pages/index.html" },
+    { "source": "/chat", "destination": "/frontend/pages/chat.html" },
+    { "source": "/chat.html", "destination": "/frontend/pages/chat.html" },
+    { "source": "/frontend/pages/chat.html", "destination": "/frontend/pages/chat.html" },
+    { "source": "/styles/(.*)", "destination": "/frontend/styles/$1" },
+    { "source": "/scripts/(.*)", "destination": "/frontend/scripts/$1" },
+    { "source": "/assets/(.*)", "destination": "/frontend/assets/$1" },
+    { "source": "/pages/(.*)", "destination": "/frontend/pages/$1" }
+  ],
+  "cleanUrls": true
 }
