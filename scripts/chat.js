@@ -1,29 +1,30 @@
 /* ============================================================
    Bengali LLM — Chat Interface JavaScript
+   Updated to use the LangGraph / FastAPI backend
    ============================================================ */
 
 'use strict';
 
-// ─── Configuration ─────────────────────────────────────────
-const CONFIG = {
-  apiEndpoint: localStorage.getItem('api_endpoint') || '',
-  apiKey:      localStorage.getItem('api_key')      || '',
-  reqFormat:   localStorage.getItem('req_format')   || 'json_message',
-  resPath:     localStorage.getItem('res_path')     || 'response',
-  temperature: parseFloat(localStorage.getItem('temperature') || '0.7'),
-  maxTokens:   parseInt(localStorage.getItem('max_tokens')   || '512'),
-  systemPrompt: localStorage.getItem('system_prompt') ||
-    'You are a helpful Bengali language assistant developed by Calcutta University Data Science Lab. You excel at understanding and generating Bengali text. Answer in the same language as the user\'s question.',
-};
+// ─── Backend Configuration ──────────────────────────────────
+// Default: same machine. Change to production URL when deployed.
+const BACKEND_BASE = localStorage.getItem('backend_base') || 'http://localhost:8000';
 
-// ─── State ─────────────────────────────────────────────────
-let messages       = [];   // { role, content, time }
-let isLoading      = false;
-let msgCounter     = 0;
-let convoCounter   = 1;
-let sidebarItems   = [{ id: 1, label: 'New Conversation', active: true }];
-let langPref       = 'both'; // 'both' | 'bn' | 'en'
-let activeConvoId  = 1;
+// thread_id — unique per browser session, persists across page reloads
+// but resets on "New Chat" / "Clear"
+let threadId = sessionStorage.getItem('thread_id') || null;
+
+// ─── App State ──────────────────────────────────────────────
+let isLoading     = false;
+let msgCounter    = 0;
+let convoCounter  = 1;
+let activeConvoId = 1;
+let langPref      = 'both';
+
+// Local message list (for display only — source of truth is SQLite backend)
+let displayMessages = [];
+
+// sidebar items: { id, label, threadId }
+let sidebarItems = [{ id: 1, label: 'New Conversation', threadId: null }];
 
 // ─── DOM Refs ──────────────────────────────────────────────
 const messagesArea    = document.getElementById('messages-area');
@@ -42,7 +43,7 @@ const sidebarList     = document.getElementById('sidebar-list');
 const modelStatusText = document.getElementById('model-status-text');
 const toolbarClearBtn = document.getElementById('toolbar-clear-btn');
 
-// Config panel inputs
+// Settings panel inputs (now just backend URL + optional colab URL for hot-swap)
 const apiEndpointInput  = document.getElementById('api-endpoint');
 const apiKeyInput       = document.getElementById('api-key');
 const reqFormatSelect   = document.getElementById('req-format');
@@ -53,21 +54,26 @@ const systemPromptTA    = document.getElementById('system-prompt');
 const tempValSpan       = document.getElementById('temp-val');
 const tokensValSpan     = document.getElementById('tokens-val');
 
-// ─── Init config panel values ──────────────────────────────
+// ─── Init settings panel with sensible defaults ─────────────
 const initConfigPanel = () => {
-  apiEndpointInput.value  = CONFIG.apiEndpoint;
-  apiKeyInput.value       = CONFIG.apiKey;
-  reqFormatSelect.value   = CONFIG.reqFormat;
-  resPathInput.value      = CONFIG.resPath;
-  temperatureSlider.value = CONFIG.temperature;
-  maxTokensSlider.value   = CONFIG.maxTokens;
-  systemPromptTA.value    = CONFIG.systemPrompt;
-  tempValSpan.textContent   = CONFIG.temperature;
-  tokensValSpan.textContent = CONFIG.maxTokens;
+  // Repurpose the "API Endpoint" field → LangGraph backend URL
+  apiEndpointInput.value       = localStorage.getItem('backend_base') || 'http://localhost:8000';
+  apiKeyInput.value            = '';           // not used with own backend
+  reqFormatSelect.value        = 'json_message';
+  resPathInput.value           = 'response';
+  temperatureSlider.value      = 0.7;
+  maxTokensSlider.value        = 512;
+  systemPromptTA.value         = '(System prompt is configured in the Colab inference server)';
+  tempValSpan.textContent      = '0.7';
+  tokensValSpan.textContent    = '512';
+
+  // Relabel the endpoint field for clarity
+  const epLabel = document.querySelector('label[for="api-endpoint"]');
+  if (epLabel) epLabel.textContent = 'Backend URL (LangGraph)';
 };
 initConfigPanel();
 
-// ─── Slider live update ─────────────────────────────────────
+// Live slider display
 temperatureSlider.addEventListener('input', () => {
   tempValSpan.textContent = parseFloat(temperatureSlider.value).toFixed(1);
 });
@@ -75,30 +81,30 @@ maxTokensSlider.addEventListener('input', () => {
   tokensValSpan.textContent = parseInt(maxTokensSlider.value);
 });
 
-// ─── Save config ────────────────────────────────────────────
-saveConfigBtn.addEventListener('click', () => {
-  CONFIG.apiEndpoint  = apiEndpointInput.value.trim();
-  CONFIG.apiKey       = apiKeyInput.value.trim();
-  CONFIG.reqFormat    = reqFormatSelect.value;
-  CONFIG.resPath      = resPathInput.value.trim() || 'response';
-  CONFIG.temperature  = parseFloat(temperatureSlider.value);
-  CONFIG.maxTokens    = parseInt(maxTokensSlider.value);
-  CONFIG.systemPrompt = systemPromptTA.value.trim();
+// Save — updating backend URL + optionally hot-swapping Colab endpoint
+saveConfigBtn.addEventListener('click', async () => {
+  const newBase = apiEndpointInput.value.trim().replace(/\/$/, '');
+  localStorage.setItem('backend_base', newBase);
 
-  localStorage.setItem('api_endpoint',   CONFIG.apiEndpoint);
-  localStorage.setItem('api_key',        CONFIG.apiKey);
-  localStorage.setItem('req_format',     CONFIG.reqFormat);
-  localStorage.setItem('res_path',       CONFIG.resPath);
-  localStorage.setItem('temperature',    CONFIG.temperature);
-  localStorage.setItem('max_tokens',     CONFIG.maxTokens);
-  localStorage.setItem('system_prompt',  CONFIG.systemPrompt);
+  // If the user put a Colab ngrok URL in the "API Key" field as a shortcut,
+  // hot-swap it on the backend (POST /api/config/endpoint)
+  const colabUrl = apiKeyInput.value.trim();
+  if (colabUrl.startsWith('https://')) {
+    try {
+      await fetch(`${newBase}/api/config/endpoint`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: `${colabUrl}/generate` }),
+      });
+    } catch (_) { /* non-critical */ }
+  }
 
   configSavedMsg.classList.add('show');
-  modelStatusText.textContent = CONFIG.apiEndpoint ? 'Configured' : 'No endpoint set';
+  modelStatusText.textContent = 'Configured';
   setTimeout(() => configSavedMsg.classList.remove('show'), 2500);
 });
 
-// ─── Settings panel toggle ─────────────────────────────────
+// ─── Settings panel open / close ────────────────────────────
 settingsBtn.addEventListener('click', () => {
   apiPanel.classList.add('open');
   apiEndpointInput.focus();
@@ -108,7 +114,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') apiPanel.classList.remove('open');
 });
 
-// ─── Language toggle ───────────────────────────────────────
+// ─── Language toggle ─────────────────────────────────────────
 const langBtns = document.querySelectorAll('.lang-btn');
 langBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -119,7 +125,6 @@ langBtns.forEach(btn => {
     updatePlaceholder();
   });
 });
-
 const updatePlaceholder = () => {
   const map = {
     both: 'বাংলায় বা ইংরেজিতে প্রশ্ন করুন... (Ask in Bengali or English)',
@@ -129,14 +134,13 @@ const updatePlaceholder = () => {
   chatInput.placeholder = map[langPref] || map.both;
 };
 
-// ─── Textarea auto-resize ──────────────────────────────────
+// ─── Textarea auto-resize ────────────────────────────────────
 chatInput.addEventListener('input', () => {
   chatInput.style.height = 'auto';
   chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
   sendBtn.disabled = chatInput.value.trim() === '';
 });
 
-// Clear input button
 toolbarClearBtn?.addEventListener('click', () => {
   chatInput.value = '';
   chatInput.style.height = 'auto';
@@ -144,7 +148,7 @@ toolbarClearBtn?.addEventListener('click', () => {
   chatInput.focus();
 });
 
-// ─── Send on Enter (Shift+Enter = newline) ─────────────────
+// ─── Keyboard send ───────────────────────────────────────────
 chatInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
@@ -153,7 +157,7 @@ chatInput.addEventListener('keydown', (e) => {
 });
 sendBtn.addEventListener('click', () => { if (!isLoading) handleSend(); });
 
-// ─── Suggestion chips ──────────────────────────────────────
+// ─── Suggestion chips ────────────────────────────────────────
 document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     chatInput.value = chip.textContent.trim();
@@ -165,15 +169,16 @@ document.querySelectorAll('.chip').forEach(chip => {
   });
 });
 
-// ─── Helpers ───────────────────────────────────────────────
-const now = () => {
-  const d = new Date();
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-};
+// ─── Helpers ─────────────────────────────────────────────────
+const now = () => new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+const scrollToBottom = () => messagesArea.scrollTo({ top: messagesArea.scrollHeight, behavior: 'smooth' });
 
-const scrollToBottom = () => {
-  messagesArea.scrollTo({ top: messagesArea.scrollHeight, behavior: 'smooth' });
-};
+const escapeHtml = (str) => str
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
 const hideWelcome = () => {
   if (chatWelcome && chatWelcome.style.display !== 'none') {
@@ -183,7 +188,7 @@ const hideWelcome = () => {
   }
 };
 
-// ─── Render a message bubble ───────────────────────────────
+// ─── Render message bubble ───────────────────────────────────
 const renderMessage = (role, content, time, isError = false) => {
   const id = `msg-${++msgCounter}`;
   const isUser = role === 'user';
@@ -207,21 +212,11 @@ const renderMessage = (role, content, time, isError = false) => {
 
   msgContainer.appendChild(el);
   scrollToBottom();
-  updateSidebarItem(content);
+  updateSidebarLabel(content);
   return el;
 };
 
-// ─── Escape HTML ───────────────────────────────────────────
-const escapeHtml = (str) => {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-};
-
-// ─── Typing indicator ──────────────────────────────────────
+// ─── Typing indicator ────────────────────────────────────────
 let typingEl = null;
 const showTyping = () => {
   typingEl = document.createElement('div');
@@ -241,166 +236,106 @@ const showTyping = () => {
   msgContainer.appendChild(typingEl);
   scrollToBottom();
 };
-const removeTyping = () => {
-  if (typingEl) { typingEl.remove(); typingEl = null; }
-};
+const removeTyping = () => { if (typingEl) { typingEl.remove(); typingEl = null; } };
 
-// ─── Build request body ────────────────────────────────────
-const buildRequestBody = (userMessage) => {
-  const keyMap = {
-    json_message: 'message',
-    json_prompt:  'prompt',
-    json_input:   'input',
-    json_text:    'text',
-    json_query:   'query',
-  };
-  const key = keyMap[CONFIG.reqFormat] || 'message';
-  const body = {
-    [key]: userMessage,
-    temperature: CONFIG.temperature,
-    max_tokens:  CONFIG.maxTokens,
-  };
-  if (CONFIG.systemPrompt) body.system_prompt = CONFIG.systemPrompt;
-  // Add conversation history
-  if (messages.length > 1) {
-    body.history = messages.slice(0, -1).map(m => ({
-      role:    m.role,
-      content: m.content,
-    }));
-  }
-  return body;
-};
-
-// ─── Extract response text ─────────────────────────────────
-const extractResponse = (data) => {
-  if (!CONFIG.resPath) return JSON.stringify(data);
-
-  // Support dot/bracket notation e.g. "choices[0].message.content"
-  const path = CONFIG.resPath;
-
-  // Tokenize: "choices[0].message.content" -> ["choices", "0", "message", "content"]
-  const tokens = path
-    .replace(/\[(\d+)\]/g, '.$1')
-    .split('.')
-    .filter(Boolean);
-
-  let val = data;
-  for (const token of tokens) {
-    if (val == null) return '[No response]';
-    val = val[token];
-  }
-
-  if (val == null) {
-    // Fallback: stringify whole response
-    return JSON.stringify(data, null, 2);
-  }
-  return String(val);
-};
-
-// ─── Main send handler ─────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  MAIN SEND — calls LangGraph backend
+// ════════════════════════════════════════════════════════════
 const handleSend = async () => {
   const text = chatInput.value.trim();
   if (!text || isLoading) return;
 
-  if (!CONFIG.apiEndpoint) {
-    showApiWarning();
-    return;
-  }
+  const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
 
   hideWelcome();
   isLoading = true;
   sendBtn.disabled = true;
 
-  // Store & render user message
+  // Render user message immediately
   const userTime = now();
-  messages.push({ role: 'user', content: text, time: userTime });
+  displayMessages.push({ role: 'user', content: text, time: userTime });
   renderMessage('user', text, userTime);
 
-  // Reset input
   chatInput.value = '';
   chatInput.style.height = 'auto';
-
-  // Show typing
   showTyping();
 
   try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (CONFIG.apiKey) {
-      headers['Authorization'] = `Bearer ${CONFIG.apiKey}`;
-    }
+    const payload = {
+      question: text,
+      thread_id: threadId || undefined,   // undefined = generate new on backend
+    };
 
-    const response = await fetch(CONFIG.apiEndpoint, {
+    const res = await fetch(`${base}/api/chat`, {
       method: 'POST',
-      headers,
-      body: JSON.stringify(buildRequestBody(text)),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
 
     removeTyping();
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => 'Unknown error');
-      throw new Error(`HTTP ${response.status}: ${errText}`);
+    if (!res.ok) {
+      const err = await res.text().catch(() => `HTTP ${res.status}`);
+      throw new Error(err);
     }
 
-    const data = await response.json();
-    const replyText = extractResponse(data);
-    const replyTime = now();
+    const data = await res.json();
 
-    messages.push({ role: 'assistant', content: replyText, time: replyTime });
-    renderMessage('assistant', replyText, replyTime);
+    // Persist thread_id for the lifetime of this session
+    if (data.thread_id && !threadId) {
+      threadId = data.thread_id;
+      sessionStorage.setItem('thread_id', threadId);
+      // Update sidebar item's threadId
+      const item = sidebarItems.find(i => i.id === activeConvoId);
+      if (item) item.threadId = threadId;
+    }
+
+    const replyTime = now();
+    displayMessages.push({ role: 'assistant', content: data.response, time: replyTime });
+    renderMessage('assistant', data.response, replyTime);
+
+    modelStatusText.textContent = 'Connected';
 
   } catch (err) {
     removeTyping();
     const errTime = now();
-    const errMsg = `Error: ${err.message}`;
-    messages.push({ role: 'assistant', content: errMsg, time: errTime });
+    let errMsg;
+
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      errMsg = '⚠️ Cannot reach the backend server. Make sure it is running at ' + base;
+    } else {
+      errMsg = `Error: ${err.message}`;
+    }
+
+    displayMessages.push({ role: 'assistant', content: errMsg, time: errTime });
     renderMessage('assistant', errMsg, errTime, true);
-    console.error('[Bengali LLM Chat]', err);
+    modelStatusText.textContent = 'Error';
+    console.error('[Bengali LLM]', err);
+
   } finally {
     isLoading = false;
     sendBtn.disabled = chatInput.value.trim() === '';
   }
 };
 
-// ─── Show API warning ──────────────────────────────────────
-const showApiWarning = () => {
-  hideWelcome();
-  const warnTime = now();
-  const warnText = '⚠️ No API endpoint configured. Please click the ⚙️ Settings button in the top-right corner and enter your API endpoint URL.';
-  renderMessage('assistant', warnText, warnTime, true);
-  settingsBtn.style.animation = 'none';
-  setTimeout(() => {
-    settingsBtn.style.animation = '';
-    settingsBtn.style.boxShadow = '0 0 0 3px rgba(0,212,200,0.4)';
-    setTimeout(() => { settingsBtn.style.boxShadow = ''; }, 1500);
-  }, 10);
-};
+// ─── Clear chat ──────────────────────────────────────────────
+const clearChat = async () => {
+  // Tell backend to clear the SQLite checkpoint for this thread
+  if (threadId) {
+    const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
+    try {
+      await fetch(`${base}/api/history/${threadId}`, { method: 'DELETE' });
+    } catch (_) { /* non-critical */ }
+  }
 
-// ─── Copy button handler ───────────────────────────────────
-document.addEventListener('click', (e) => {
-  const copyBtn = e.target.closest('.copy-btn');
-  if (!copyBtn) return;
-  const bubble = copyBtn.closest('.message-bubble');
-  const text = bubble
-    ? bubble.textContent.replace('📋 Copy', '').trim()
-    : '';
-  navigator.clipboard.writeText(text).then(() => {
-    copyBtn.textContent = '✅ Copied';
-    setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
-  }).catch(() => {
-    copyBtn.textContent = '❌ Failed';
-    setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
-  });
-});
+  // Reset local session
+  threadId = null;
+  sessionStorage.removeItem('thread_id');
+  displayMessages = [];
 
-// ─── Clear chat ────────────────────────────────────────────
-const clearChat = () => {
-  // Remove all message els except welcome
-  const messageDivs = msgContainer.querySelectorAll('.message');
-  messageDivs.forEach(m => m.remove());
-  messages = [];
+  // Remove message bubbles
+  msgContainer.querySelectorAll('.message').forEach(m => m.remove());
 
-  // Show welcome again
   if (chatWelcome) {
     chatWelcome.style.display = 'block';
     chatWelcome.style.opacity = '1';
@@ -408,27 +343,27 @@ const clearChat = () => {
   chatInput.value = '';
   chatInput.style.height = 'auto';
   sendBtn.disabled = true;
+  modelStatusText.textContent = 'Connected';
 };
 
 clearChatBtn.addEventListener('click', () => {
-  if (messages.length === 0) return;
-  if (confirm('Clear this conversation?')) clearChat();
+  if (displayMessages.length === 0) return;
+  if (confirm('Clear this conversation? This also removes it from the backend history.')) {
+    clearChat();
+  }
 });
 
-// ─── New chat button ───────────────────────────────────────
+// ─── New Chat ────────────────────────────────────────────────
 newChatBtn.addEventListener('click', () => {
   clearChat();
-  // Add new sidebar item
   convoCounter++;
   activeConvoId = convoCounter;
-  const label = `Conversation ${convoCounter}`;
-  sidebarItems.push({ id: convoCounter, label, active: true });
+  sidebarItems.push({ id: convoCounter, label: 'New Conversation', threadId: null });
   renderSidebar();
 });
 
-// ─── Sidebar render ────────────────────────────────────────
+// ─── Sidebar ─────────────────────────────────────────────────
 const renderSidebar = () => {
-  // Keep the group label, remove old items
   const groupLabel = sidebarList.querySelector('.sidebar-group-label');
   sidebarList.innerHTML = '';
   if (groupLabel) sidebarList.appendChild(groupLabel);
@@ -446,36 +381,52 @@ const renderSidebar = () => {
       <div class="sidebar-item-text"><span>${escapeHtml(item.label)}</span></div>
       <span class="sidebar-item-time">Now</span>
     `;
-    el.addEventListener('click', () => {
-      activeConvoId = item.id;
-      renderSidebar();
-    });
+    el.addEventListener('click', () => { activeConvoId = item.id; renderSidebar(); });
     sidebarList.appendChild(el);
   });
 };
 
-// ─── Update sidebar with first user message ────────────────
-const updateSidebarItem = (content) => {
+const updateSidebarLabel = (content) => {
   const item = sidebarItems.find(i => i.id === activeConvoId);
-  if (item && item.label === 'New Conversation' || (item && item.label.startsWith('Conversation '))) {
-    // Use first user message as label
+  if (item && (item.label === 'New Conversation' || item.label.startsWith('Conversation '))) {
     const snippet = content.slice(0, 30) + (content.length > 30 ? '…' : '');
-    if (snippet.trim()) {
-      item.label = snippet;
-      renderSidebar();
-    }
+    if (snippet.trim()) { item.label = snippet; renderSidebar(); }
   }
 };
 
-// ─── Model status ──────────────────────────────────────────
-if (CONFIG.apiEndpoint) {
-  modelStatusText.textContent = 'Configured';
-} else {
-  modelStatusText.textContent = 'No endpoint set';
-}
+// ─── Copy button ─────────────────────────────────────────────
+document.addEventListener('click', (e) => {
+  const copyBtn = e.target.closest('.copy-btn');
+  if (!copyBtn) return;
+  const bubble = copyBtn.closest('.message-bubble');
+  const text = bubble ? bubble.textContent.replace('📋 Copy', '').trim() : '';
+  navigator.clipboard.writeText(text).then(() => {
+    copyBtn.textContent = '✅ Copied';
+    setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
+  }).catch(() => {
+    copyBtn.textContent = '❌ Failed';
+    setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
+  });
+});
 
-// ─── Init sidebar ──────────────────────────────────────────
+// ─── Startup ─────────────────────────────────────────────────
 renderSidebar();
 
+// Check if backend is alive
+(async () => {
+  const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
+  try {
+    const res = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      modelStatusText.textContent = 'Connected';
+      console.log('%c Bengali LLM Backend connected ✅', 'color:#00d4c8;font-weight:bold;');
+    } else {
+      modelStatusText.textContent = 'Backend error';
+    }
+  } catch (_) {
+    modelStatusText.textContent = 'Offline — start backend';
+    console.warn('Backend not reachable at', base);
+  }
+})();
+
 console.log('%c Bengali LLM Chat — CU Data Science Lab 💬', 'color:#00d4c8;font-weight:bold;font-size:14px;');
-console.log('%c Configure your API endpoint in the ⚙️ Settings panel.', 'color:#8b92a8;font-size:12px;');
