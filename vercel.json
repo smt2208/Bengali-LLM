@@ -1,7 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/", "destination": "/pages/index.html" },
-    { "source": "/chat", "destination": "/pages/chat.html" }
-  ],
-  "cleanUrls": true
-}
