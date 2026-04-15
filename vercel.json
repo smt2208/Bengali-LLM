@@ -5,10 +5,8 @@
     { "source": "/chat.html", "destination": "/frontend/pages/chat.html" },
     { "source": "/pages/index.html", "destination": "/frontend/pages/index.html" },
     { "source": "/pages/chat.html", "destination": "/frontend/pages/chat.html" },
-    { "source": "/styles/(.*)", "destination": "/frontend/styles/$1" },
-    { "source": "/scripts/(.*)", "destination": "/frontend/scripts/$1" },
-    { "source": "/assets/(.*)", "destination": "/frontend/assets/$1" },
-    { "source": "/pages/(.*)", "destination": "/frontend/pages/$1" }
-  ],
-  "cleanUrls": true
+    { "source": "/styles/:path*", "destination": "/frontend/styles/:path*" },
+    { "source": "/scripts/:path*", "destination": "/frontend/scripts/:path*" },
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" }
+  ]
 }
