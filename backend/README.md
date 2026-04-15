@@ -50,10 +50,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### 4. Colab side
-- Open `colab_inference_server.py` in this folder
-- Copy each cell into a Colab notebook and run them in order
-- Set `ADAPTER_PATH` to your LoRA adapter on Google Drive
-- Set `NGROK_AUTH_TOKEN` and `NGROK_STATIC_DOMAIN` from your ngrok dashboard
+- Upload `colab_inference_server.ipynb` (from the root folder) to Google Colab
+- Set `ADAPTER_PATH` in Cell 3 to your LoRA adapter on Google Drive
+- Set `NGROK_AUTH_TOKEN` and `NGROK_STATIC_DOMAIN` in Cell 7 from your ngrok dashboard
+- Run all cells in order
 - Copy the printed `/generate` URL into this project's `.env`
 
 ---
@@ -88,7 +88,6 @@ backend/
 ├── main.py                    ← FastAPI app (entry point)
 ├── requirements.txt
 ├── .env.example
-├── colab_inference_server.py  ← Colab reference code (copy cells to notebook)
 ├── config/
 │   └── settings.py            ← Pydantic settings (reads .env)
 ├── graph/
