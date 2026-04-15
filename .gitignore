@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ── LoRA adapters & large model files (too large for GitHub) ─
+# Store these on Google Drive or HuggingFace Hub instead
+qwen_additional_qa_lora/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+# ── Backend runtime artifacts ────────────────────────────────
+backend/db/
+backend/__pycache__/
