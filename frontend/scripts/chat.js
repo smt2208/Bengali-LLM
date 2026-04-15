@@ -6,9 +6,7 @@
 'use strict';
 
 // ─── Backend Configuration ──────────────────────────────────
-// ↓ UPDATE this to your Render URL when deploying to production
-// e.g. 'https://bengali-llm-backend.onrender.com'
-const BACKEND_BASE = localStorage.getItem('backend_base') || 'http://localhost:8000';
+const BACKEND_BASE = localStorage.getItem('backend_base') || 'https://bengali-llm-backend.onrender.com';
 
 // thread_id — unique per browser session, persists across page reloads
 // but resets on "New Chat" / "Clear"

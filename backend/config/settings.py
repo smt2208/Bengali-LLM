@@ -30,12 +30,9 @@ class Settings(BaseSettings):
     sqlite_db_path: str = "./db/conversations.db"
 
     # ── CORS ─────────────────────────────────────────────────
-    allowed_origins: List[str] = [
-        "http://localhost:3457",
-        "http://127.0.0.1:3457",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-    ]
+    # Default '*' allows all origins — set a comma-separated list in .env
+    # (ALLOWED_ORIGINS=https://yoursite.com) to restrict in production.
+    allowed_origins: List[str] = ["*"]
 
     # ── Request behaviour ────────────────────────────────────
     request_timeout: float = 90.0       # seconds — Colab inference can be slow
