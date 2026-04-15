@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chat with Bengali LLM — Fine-tuned model for Bengali language understanding, by Calcutta University Data Science Lab." />
+  <title>Bengali LLM Chat | CU Data Science Lab</title>
+  <link rel="stylesheet" href="../styles/styles.css" />
+  <link rel="stylesheet" href="../styles/chat.css" />
+</head>
+<body class="chat-page">
+
+<!-- ── Background Blobs ──────────────────────────────────── -->
+<div class="bg-blobs" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<!-- ── Chat Navbar ────────────────────────────────────────── -->
+<nav class="chat-navbar" aria-label="Chat navigation">
+  <div class="container chat-nav-inner">
+    <div class="chat-nav-left">
+      <a href="index.html" class="chat-nav-back" id="chat-back-btn" aria-label="Back to home">
+        ← Home
+      </a>
+      <div class="chat-title-area">
+        <div class="chat-model-dot" aria-hidden="true"></div>
+        <div>
+          <h1>Bengali LLM</h1>
+        </div>
+      </div>
+    </div>
+    <div class="chat-nav-right">
+      <button class="chat-action-btn" id="clear-chat-btn" aria-label="Clear conversation">
+        🗑️ <span>Clear</span>
+      </button>
+      <button class="chat-action-btn" id="settings-btn" aria-label="Open API settings">
+        ⚙️ <span>Settings</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Chat App Shell ─────────────────────────────────────── -->
+<div class="chat-app">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="chat-sidebar" aria-label="Conversation history">
+    <div class="sidebar-header">
+      <h2>Conversations</h2>
+      <button class="new-chat-btn" id="new-chat-btn" aria-label="Start new conversation">
+        + New Chat
+      </button>
+    </div>
+
+    <div class="sidebar-list" id="sidebar-list" role="list">
+      <div class="sidebar-group-label">Today</div>
+      <div class="sidebar-item active" role="listitem" id="convo-1" data-convo="1" tabindex="0">
+        <div class="sidebar-item-icon">💬</div>
+        <div class="sidebar-item-text">
+          <span>New Conversation</span>
+        </div>
+        <span class="sidebar-item-time">Now</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="model-info-box">
+        <div class="model-name">Bengali LLM v1.0</div>
+        <div class="model-status">
+          <div class="status-dot"></div>
+          <span id="model-status-text">Connected</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Chat Main ────────────────────────────────────────── -->
+  <main class="chat-main" aria-label="Chat messages">
+
+    <!-- Messages Area -->
+    <div class="messages-area" id="messages-area" role="log" aria-live="polite" aria-label="Conversation">
+      <div class="container">
+
+        <!-- Welcome Screen -->
+        <div class="chat-welcome" id="chat-welcome">
+          <div class="welcome-icon" aria-hidden="true">🤖</div>
+          <h2>নমস্কার! <span class="gradient-text">Hello!</span></h2>
+          <p>
+            I'm the Bengali LLM developed by the <strong>Calcutta University Data Science Lab</strong>.
+            Ask me anything in Bengali or English — I understand both!
+          </p>
+          <div class="suggestion-chips" role="list" aria-label="Suggested prompts">
+            <button class="chip" id="chip-1" role="listitem">বাংলা ভাষার ইতিহাস বলুন</button>
+            <button class="chip" id="chip-2" role="listitem">রবীন্দ্রনাথ ঠাকুর সম্পর্কে বলুন</button>
+            <button class="chip" id="chip-3" role="listitem">আজকের আবহাওয়া কেমন?</button>
+            <button class="chip" id="chip-4" role="listitem">Tell me about Bengali culture</button>
+            <button class="chip" id="chip-5" role="listitem">কলকাতার বিখ্যাত খাবার কী কী?</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area" role="group" aria-label="Message input">
+      <div class="container input-wrapper">
+        <div class="input-box">
+          <div class="input-row">
+            <textarea
+              id="chat-input"
+              placeholder="বাংলায় বা ইংরেজিতে প্রশ্ন করুন... (Ask in Bengali or English)"
+              rows="1"
+              aria-label="Type your message"
+              autocomplete="off"
+              spellcheck="false"
+            ></textarea>
+            <button id="send-btn" aria-label="Send message" disabled>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+            </button>
+          </div>
+          <div class="input-toolbar">
+            <div class="toolbar-left">
+              <div class="lang-toggle" role="group" aria-label="Language preference">
+                <button class="lang-btn active" id="lang-both" aria-pressed="true">Both</button>
+                <button class="lang-btn" id="lang-bn" aria-pressed="false">বাংলা</button>
+                <button class="lang-btn" id="lang-en" aria-pressed="false">English</button>
+              </div>
+              <button class="toolbar-btn" id="toolbar-clear-btn" title="Clear input">
+                ✕ Clear
+              </button>
+            </div>
+            <div class="input-hint">
+              <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for new line
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── API Settings Panel ─────────────────────────────────── -->
+<aside class="api-config-panel" id="api-config-panel" aria-label="API Settings" role="dialog" aria-modal="true">
+  <div class="api-panel-header">
+    <h3>⚙️ API Settings</h3>
+    <button class="api-panel-close" id="api-panel-close" aria-label="Close settings">✕</button>
+  </div>
+  <div class="api-panel-body">
+
+    <div class="field-group">
+      <label for="api-endpoint">API Endpoint</label>
+      <input
+        type="url"
+        id="api-endpoint"
+        placeholder="http://localhost:8000/generate"
+        value=""
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+
+    <div class="field-group">
+      <label for="api-key">API Key (optional)</label>
+      <input
+        type="password"
+        id="api-key"
+        placeholder="Bearer token or API key"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="field-group">
+      <label for="req-format">Request Format</label>
+      <select id="req-format">
+        <option value="json_message">{ "message": "..." }</option>
+        <option value="json_prompt">{ "prompt": "..." }</option>
+        <option value="json_input">{ "input": "..." }</option>
+        <option value="json_text">{ "text": "..." }</option>
+        <option value="json_query">{ "query": "..." }</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label for="res-path">Response JSON Path</label>
+      <input
+        type="text"
+        id="res-path"
+        placeholder="e.g. response OR choices[0].message.content"
+        value="response"
+      />
+    </div>
+
+    <div class="field-group">
+      <label>Temperature</label>
+      <div class="slider-row">
+        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" aria-label="Temperature" />
+        <span class="slider-val" id="temp-val">0.7</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Max Tokens</label>
+      <div class="slider-row">
+        <input type="range" id="max-tokens" min="64" max="2048" step="64" value="512" aria-label="Max tokens" />
+        <span class="slider-val" id="tokens-val">512</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label for="system-prompt">System Prompt</label>
+      <textarea id="system-prompt" rows="4" placeholder="You are a helpful Bengali language assistant developed by Calcutta University Data Science Lab...">You are a helpful Bengali language assistant developed by Calcutta University Data Science Lab. You excel at understanding and generating Bengali text. Answer in the same language as the user's question.</textarea>
+    </div>
+
+    <button class="save-config-btn" id="save-config-btn">💾 Save Configuration</button>
+    <div class="config-saved-msg" id="config-saved-msg">✅ Configuration saved!</div>
+
+  </div>
+</aside>
+
+<script src="../scripts/chat.js"></script>
+</body>
+</html>

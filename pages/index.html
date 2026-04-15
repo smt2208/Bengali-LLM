@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Bengali LLM — A fine-tuned large language model for Bengali language understanding, developed by the Calcutta University Data Science Lab." />
+  <title>Bengali LLM | Calcutta University Data Science Lab</title>
+  <link rel="stylesheet" href="../styles/styles.css" />
+  <link rel="stylesheet" href="../styles/landing.css" />
+</head>
+<body>
+
+<!-- ── Background Blobs ──────────────────────────────────── -->
+<div class="bg-blobs" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<!-- ── Navigation ────────────────────────────────────────── -->
+<nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+  <div class="container nav-inner">
+    <a href="index.html" class="nav-logo" id="nav-logo">
+      <img src="../assets/cu-logo.png" alt="Calcutta University Logo" id="nav-logo-img" />
+      <div class="nav-logo-text">
+        <span>Bengali LLM</span>
+        <span>CU Data Science Lab</span>
+      </div>
+    </a>
+    <ul class="nav-menu" id="nav-menu" role="menubar">
+      <li class="nav-item" role="none">
+        <a href="#about" class="nav-link" role="menuitem">About</a>
+      </li>
+      <li class="nav-item" role="none">
+        <a href="#datasets" class="nav-link" role="menuitem" aria-haspopup="true">
+          Datasets &amp; Fine-Tuning ▾
+        </a>
+        <div class="dropdown-menu" role="menu" aria-label="Datasets submenu">
+          <a href="#datasets" class="dropdown-item" role="menuitem" id="dd-banglarqa">
+            <div class="dropdown-item-icon">📚</div>
+            <div class="dropdown-item-text">
+              <strong>BanglaRQA Dataset</strong>
+              <span>Bengali reading comprehension &amp; QA pairs</span>
+            </div>
+          </a>
+          <a href="#datasets" class="dropdown-item" role="menuitem" id="dd-comm">
+            <div class="dropdown-item-icon">💬</div>
+            <div class="dropdown-item-text">
+              <strong>Bengali Instruction Dataset</strong>
+              <span>Diverse Bengali conversations &amp; instructions</span>
+            </div>
+          </a>
+          <a href="#datasets" class="dropdown-item" role="menuitem" id="dd-alpaca">
+            <div class="dropdown-item-icon">🦙</div>
+            <div class="dropdown-item-text">
+              <strong>Alpaca-Style Instructions</strong>
+              <span>Instruction-following fine-tuning data</span>
+            </div>
+          </a>
+          <a href="#datasets" class="dropdown-item" role="menuitem" id="dd-model">
+            <div class="dropdown-item-icon">🤖</div>
+            <div class="dropdown-item-text">
+              <strong>Base Model: Qwen 2.5-3B</strong>
+              <span>Fine-tuned on Bengali corpora</span>
+            </div>
+          </a>
+        </div>
+      </li>
+      <li class="nav-item" role="none">
+        <a href="#comparison" class="nav-link" role="menuitem">Comparison</a>
+      </li>
+      <li class="nav-item" role="none">
+        <a href="#metrics" class="nav-link" role="menuitem">Metrics</a>
+      </li>
+      <li role="none">
+        <a href="chat.html" class="btn-chat-nav" id="nav-chat-btn" role="menuitem">
+          💬 Try the Chat
+        </a>
+      </li>
+    </ul>
+    <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Nav Overlay -->
+<div class="mobile-overlay" id="mobile-overlay" aria-hidden="true">
+  <button class="mobile-close" id="mobile-close-btn" aria-label="Close menu">✕</button>
+  <ul>
+    <li><a href="#about"      class="mobile-link" id="m-about">About</a></li>
+    <li><a href="#datasets"   class="mobile-link" id="m-datasets">Datasets &amp; Fine-Tuning</a></li>
+    <li><a href="#comparison" class="mobile-link" id="m-comparison">Comparison</a></li>
+    <li><a href="#metrics"    class="mobile-link" id="m-metrics">Metrics</a></li>
+    <li><a href="chat.html"   class="btn-primary mobile-cta" id="m-chat">💬 Try the Chat</a></li>
+  </ul>
+</div>
+
+<main>
+
+  <!-- ── Hero ──────────────────────────────────────────────── -->
+  <section class="hero-section" id="home" aria-label="Hero">
+    <div class="hero-bg">
+      <img src="../assets/hero-banner.png" alt="" aria-hidden="true" id="hero-bg-img" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="container hero-content">
+      <h1 class="hero-title animate-fade-up delay-1">
+        Bengali LLM<br />
+        <span class="gradient-text">বাংলা ভাষার AI</span>
+      </h1>
+      <p class="hero-subtitle animate-fade-up delay-2">
+        A fine-tuned Large Language Model for superior Bengali language understanding,
+        developed by the <strong>Calcutta University Data Science Lab</strong>.
+        Built on Qwen 2.5-3B, trained on curated Bengali corpora.
+      </p>
+      <div class="hero-actions animate-fade-up delay-3">
+        <a href="chat.html" class="btn-primary" id="hero-chat-btn">
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          Chat with Bengali LLM
+        </a>
+        <a href="#comparison" class="btn-secondary" id="hero-compare-btn">View Comparison</a>
+      </div>
+      <div class="hero-stats animate-fade-up delay-4">
+        <div class="hero-stat">
+          <span class="hero-stat-val">3B</span>
+          <span class="hero-stat-label">Parameters</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-val">Qwen 2.5</span>
+          <span class="hero-stat-label">Base Model</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-val">Bengali</span>
+          <span class="hero-stat-label">Language Focus</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-val">CU DSL</span>
+          <span class="hero-stat-label">Developed By</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator" aria-hidden="true"><span></span></div>
+  </section>
+
+  <!-- ── About ──────────────────────────────────────────────── -->
+  <section class="section" id="about" aria-label="About">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-text">
+          <span class="section-label">🏛️ About the Project</span>
+          <h2 class="section-title">Advancing Bengali<br /><span class="gradient-text">Language AI</span></h2>
+          <p class="about-description">
+            Bengali is spoken by over 230 million people, yet most large language models
+            perform poorly on Bengali tasks. Our project at the <strong>Calcutta University
+            Data Science Lab</strong> addresses this gap by fine-tuning the Qwen 2.5-3B
+            model on carefully curated Bengali datasets.
+          </p>
+          <p class="about-description" style="margin-top:12px;">
+            We focus on reading comprehension, question answering, conversational fluency,
+            and instruction-following — resulting in a model
+            that understands Bengali significantly better than the base model.
+          </p>
+        </div>
+        <div class="about-cards">
+          <div class="about-card glass-card" id="about-card-1">
+            <div class="about-card-icon">🎓</div>
+            <h3>Calcutta University</h3>
+            <p>Developed at the Data Science Lab, one of India's premier centres for AI research.</p>
+          </div>
+          <div class="about-card glass-card" id="about-card-2">
+            <div class="about-card-icon">🌐</div>
+            <h3>230M+ Speakers</h3>
+            <p>Bengali is the 6th most spoken language globally — our model speaks it natively.</p>
+          </div>
+          <div class="about-card glass-card" id="about-card-3">
+            <div class="about-card-icon">⚡</div>
+            <h3>Efficient Architecture</h3>
+            <p>3B parameter model with 4-bit quantization for fast, low-resource inference.</p>
+          </div>
+          <div class="about-card glass-card" id="about-card-4">
+            <div class="about-card-icon">📈</div>
+            <h3>Measurable Gains</h3>
+            <p>Evaluated on F1 score, ROUGE, and METEOR against baseline Qwen 2.5-3B.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Datasets ────────────────────────────────────────────── -->
+  <section class="section section-alt" id="datasets" aria-label="Datasets and fine-tuning">
+    <div class="container">
+      <div class="section-header center">
+        <span class="section-label">📚 Training Data</span>
+        <h2 class="section-title">Fine-Tuned on Multiple<br /><span class="gradient-text">Bengali Datasets</span></h2>
+        <p class="section-subtitle center-text">
+          Each dataset targets a different aspect of Bengali language understanding —
+          from formal reading comprehension to historical narratives, different government
+          processes, diverse types of Bengali conversation, and many more.
+        </p>
+      </div>
+      <div class="datasets-grid">
+        <div class="dataset-card glass-card" id="dataset-banglarqa">
+          <div class="dataset-badge">Primary Dataset</div>
+          <div class="dataset-icon" style="background: linear-gradient(135deg,#00d4c8,#0078d7);">📖</div>
+          <h3>BanglaRQA</h3>
+          <p>Bengali Reading, Question &amp; Answering dataset. Contains thousands of passage-question-answer triplets to improve comprehension and factual recall in Bengali.</p>
+          <div class="dataset-tags">
+            <span class="tag">QA Pairs</span>
+            <span class="tag">Comprehension</span>
+            <span class="tag">Formal Bengali</span>
+          </div>
+        </div>
+        <div class="dataset-card glass-card" id="dataset-comm">
+          <div class="dataset-icon" style="background: linear-gradient(135deg,#f5c842,#e0a800);">💬</div>
+          <h3>Dataset</h3>
+          <p>Diverse instruction-response pairs covering emotional support, advice, social interaction,
+             historical discussions, civic processes, and everyday conversations in Bengali.</p>
+          <div class="dataset-tags">
+            <span class="tag">Dialect Bengali</span>
+            <span class="tag">Conversation</span>
+            <span class="tag">Emotional Support</span>
+          </div>
+        </div>
+        <div class="dataset-card glass-card" id="dataset-model">
+          <div class="dataset-icon" style="background: linear-gradient(135deg,#7c3aed,#ec4899);">🤖</div>
+          <h3>Base: Qwen 2.5-3B-Instruct</h3>
+          <p>We fine-tune Alibaba's Qwen 2.5-3B-Instruct model — chosen for its strong multilingual foundations and efficient architecture suitable for low-resource deployment.</p>
+          <div class="dataset-tags">
+            <span class="tag">3B Parameters</span>
+            <span class="tag">4-bit Quant</span>
+            <span class="tag">LoRA Fine-Tuning</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Comparison ─────────────────────────────────────────── -->
+  <section class="section" id="comparison" aria-label="Before vs after comparison">
+    <div class="container">
+      <div class="section-header center">
+        <span class="section-label">📊 Before vs After</span>
+        <h2 class="section-title">See the Difference<br /><span class="gradient-text">Fine-Tuning Makes</span></h2>
+        <p class="section-subtitle center-text">
+          Real evaluation results — side-by-side comparison of the base Qwen 2.5-3B
+          model vs. our fine-tuned Bengali LLM, with ground truth references.
+        </p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="comp-tabs" role="tablist" aria-label="Comparison examples">
+        <button class="comp-tab active" id="comp-tab-1" role="tab" aria-selected="true"  aria-controls="comp-panel-1" data-tab="1">📚 Education</button>
+        <button class="comp-tab"        id="comp-tab-2" role="tab" aria-selected="false" aria-controls="comp-panel-2" data-tab="2">🏛️ Gov. Scheme</button>
+        <button class="comp-tab"        id="comp-tab-3" role="tab" aria-selected="false" aria-controls="comp-panel-3" data-tab="3">✈️ Technology</button>
+        <button class="comp-tab"        id="comp-tab-4" role="tab" aria-selected="false" aria-controls="comp-panel-4" data-tab="4">📊 Statistics</button>
+        <button class="comp-tab"        id="comp-tab-5" role="tab" aria-selected="false" aria-controls="comp-panel-5" data-tab="5">🗺️ Geography</button>
+      </div>
+
+      <!-- Panel 1 · Education (Q1) ─────────────────────────── -->
+      <div class="comp-panel active" id="comp-panel-1" role="tabpanel" aria-labelledby="comp-tab-1">
+        <div class="comp-ground-truth">
+          <span class="gt-label">🎯 Ground Truth</span>
+          <span class="gt-text">শিক্ষা দক্ষ মানবসম্পদ তৈরি করে উন্নয়নে সহায়তা করে।</span>
+        </div>
+        <div class="comp-cards">
+          <div class="comp-card glass-card before">
+            <div class="comp-card-header">
+              <span class="comp-label before-label">⚠️ Before Fine-Tuning</span>
+              <span class="comp-model">Qwen 2.5-3B Base</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> পশ্চিমবঙ্গের উন্নয়নে শিক্ষার ভূমিকা কী নামে পরিচিত?</div>
+            <div class="comp-response">
+              <p>পশ্চিমবঙ্গের উন্নয়নে শিক্ষার ভূমিকা <strong>"সৌন্দর্য"</strong> নামে পরিচিত।</p>
+              <div class="comp-issues">
+                <span>⚠️ Hallucination</span>
+                <span>⚠️ Factually wrong</span>
+                <span>⚠️ Nonsensical answer</span>
+              </div>
+            </div>
+          </div>
+          <div class="comp-arrow" aria-hidden="true">→</div>
+          <div class="comp-card glass-card after">
+            <div class="comp-card-header">
+              <span class="comp-label after-label">✅ After Fine-Tuning</span>
+              <span class="comp-model">Bengali LLM (CU DSL)</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> পশ্চিমবঙ্গের উন্নয়নে শিক্ষার ভূমিকা কী নামে পরিচিত?</div>
+            <div class="comp-response">
+              <p>শিক্ষা দক্ষ মানবসম্পদ তৈরি করে উন্নয়নে সহায়তা করে।</p>
+              <div class="comp-gains">
+                <span>✅ Exact match</span>
+                <span>✅ Factually correct</span>
+                <span>✅ Pure Bengali</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2 · Gov. Scheme (Q2) ──────────────────────── -->
+      <div class="comp-panel" id="comp-panel-2" role="tabpanel" aria-labelledby="comp-tab-2" hidden>
+        <div class="comp-ground-truth">
+          <span class="gt-label">🎯 Ground Truth</span>
+          <span class="gt-text">রূপশ্রী প্রকল্প হলো দরিদ্র পরিবারের মেয়েদের বিবাহ সহায়তা প্রকল্প।</span>
+        </div>
+        <div class="comp-cards">
+          <div class="comp-card glass-card before">
+            <div class="comp-card-header">
+              <span class="comp-label before-label">⚠️ Before Fine-Tuning</span>
+              <span class="comp-model">Qwen 2.5-3B Base</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> রূপশ্রী প্রকল্প কী নামে পরিচিত?</div>
+            <div class="comp-response">
+              <p>রূপশ্রী প্রকল্প জয়প্রabinath Thakur কর্তৃক পরিচিত <strong>"জয়প্রabinath Thakur প্রকল্প"</strong> নামে পরিচিত।</p>
+              <div class="comp-issues">
+                <span>⚠️ Garbled text</span>
+                <span>⚠️ Hallucinated name</span>
+                <span>⚠️ Completely wrong</span>
+              </div>
+            </div>
+          </div>
+          <div class="comp-arrow" aria-hidden="true">→</div>
+          <div class="comp-card glass-card after">
+            <div class="comp-card-header">
+              <span class="comp-label after-label">✅ After Fine-Tuning</span>
+              <span class="comp-model">Bengali LLM (CU DSL)</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> রূপশ্রী প্রকল্প কী নামে পরিচিত?</div>
+            <div class="comp-response">
+              <p>রূপশ্রী প্রকল্প হলো দরিদ্র পরিবারের মেয়েদের বিবাহ সহায়তা প্রকল্প।</p>
+              <div class="comp-gains">
+                <span>✅ Exact match</span>
+                <span>✅ Correct scheme info</span>
+                <span>✅ No hallucination</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3 · Technology / AI (Q5) ─────────────────── -->
+      <div class="comp-panel" id="comp-panel-3" role="tabpanel" aria-labelledby="comp-tab-3" hidden>
+        <div class="comp-ground-truth">
+          <span class="gt-label">🎯 Ground Truth</span>
+          <span class="gt-text">নিরাপদ রুট নির্ধারণ এবং ঝুঁকি কমাতে সাহায্য করে।</span>
+        </div>
+        <div class="comp-cards">
+          <div class="comp-card glass-card before">
+            <div class="comp-card-header">
+              <span class="comp-label before-label">⚠️ Before Fine-Tuning</span>
+              <span class="comp-model">Qwen 2.5-3B Base</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> কৃত্রিম বুদ্ধিমত্তা কীভাবে বিমান চলাচলে সাহায্য করে?</div>
+            <div class="comp-response">
+              <p>কৃত্রিম বুদ্ধিমত্তা বিমান চলাচলে সাহায্য করে এমন <strong>ইনস্টাগ্রাম এবং আইন্সপেরিয়াম অ্যালগরিদম</strong> ব্যবহার করে…</p>
+              <div class="comp-issues">
+                <span>⚠️ Fabricated terms</span>
+                <span>⚠️ "Instagram" hallucination</span>
+                <span>⚠️ Incoherent</span>
+              </div>
+            </div>
+          </div>
+          <div class="comp-arrow" aria-hidden="true">→</div>
+          <div class="comp-card glass-card after">
+            <div class="comp-card-header">
+              <span class="comp-label after-label">✅ After Fine-Tuning</span>
+              <span class="comp-model">Bengali LLM (CU DSL)</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> কৃত্রিম বুদ্ধিমত্তা কীভাবে বিমান চলাচলে সাহায্য করে?</div>
+            <div class="comp-response">
+              <p>নিরাপদ রুট নির্ধারণ এবং ঝুঁকি কমাতে সাহায্য করে।</p>
+              <div class="comp-gains">
+                <span>✅ Exact match</span>
+                <span>✅ Precise &amp; factual</span>
+                <span>✅ No hallucination</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 4 · Statistics (Q9) ───────────────────────── -->
+      <div class="comp-panel" id="comp-panel-4" role="tabpanel" aria-labelledby="comp-tab-4" hidden>
+        <div class="comp-ground-truth">
+          <span class="gt-label">🎯 Ground Truth</span>
+          <span class="gt-text">৯,১৩,৪৭,৭৩৬</span>
+        </div>
+        <div class="comp-cards">
+          <div class="comp-card glass-card before">
+            <div class="comp-card-header">
+              <span class="comp-label before-label">⚠️ Before Fine-Tuning</span>
+              <span class="comp-model">Qwen 2.5-3B Base</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> ২০১১ সালে পশ্চিমবঙ্গের জনসংখ্যা কত ছিল?</div>
+            <div class="comp-response">
+              <p>2011 সালে পশ্চিমবঙ্গের জনসংখ্যা <strong>94.3 লাখ</strong> ছিল।</p>
+              <div class="comp-issues">
+                <span>⚠️ Wrong figure</span>
+                <span>⚠️ Off by ~10×</span>
+                <span>⚠️ Mixed English digits</span>
+              </div>
+            </div>
+          </div>
+          <div class="comp-arrow" aria-hidden="true">→</div>
+          <div class="comp-card glass-card after">
+            <div class="comp-card-header">
+              <span class="comp-label after-label">✅ After Fine-Tuning</span>
+              <span class="comp-model">Bengali LLM (CU DSL)</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> ২০১১ সালে পশ্চিমবঙ্গের জনসংখ্যা কত ছিল?</div>
+            <div class="comp-response">
+              <p>৯,১৩,৪৭,৭৩৬</p>
+              <div class="comp-gains">
+                <span>✅ Exact census figure</span>
+                <span>✅ Bengali numerals</span>
+                <span>✅ Precise match</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 5 · Geography (Q10) ───────────────────────── -->
+      <div class="comp-panel" id="comp-panel-5" role="tabpanel" aria-labelledby="comp-tab-5" hidden>
+        <div class="comp-ground-truth">
+          <span class="gt-label">🎯 Ground Truth</span>
+          <span class="gt-text">দার্জিলিং জেলার সদর শহর।</span>
+        </div>
+        <div class="comp-cards">
+          <div class="comp-card glass-card before">
+            <div class="comp-card-header">
+              <span class="comp-label before-label">⚠️ Before Fine-Tuning</span>
+              <span class="comp-model">Qwen 2.5-3B Base</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> দার্জিলিং শহর কীসের সদর সম্পর্কে কী জানা যায়?</div>
+            <div class="comp-response">
+              <p>দার্জিলিং শহর ভারতের একটি গ্রাম বা শহর ছিল, যা আজ <strong>ইংল্যান্ডের একটি শহর</strong> হয়ে যায়।</p>
+              <div class="comp-issues">
+                <span>⚠️ Factually absurd</span>
+                <span>⚠️ Claims it's in England</span>
+                <span>⚠️ Complete hallucination</span>
+              </div>
+            </div>
+          </div>
+          <div class="comp-arrow" aria-hidden="true">→</div>
+          <div class="comp-card glass-card after">
+            <div class="comp-card-header">
+              <span class="comp-label after-label">✅ After Fine-Tuning</span>
+              <span class="comp-model">Bengali LLM (CU DSL)</span>
+            </div>
+            <div class="comp-prompt"><strong>Q:</strong> দার্জিলিং শহর কীসের সদর সম্পর্কে কী জানা যায়?</div>
+            <div class="comp-response">
+              <p>দার্জিলিং জেলার সদর শহর।</p>
+              <div class="comp-gains">
+                <span>✅ Exact match</span>
+                <span>✅ Geographically accurate</span>
+                <span>✅ Grounded response</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Metrics ─────────────────────────────────────────────── -->
+  <section class="section section-alt" id="metrics" aria-label="Evaluation metrics">
+    <div class="container">
+      <div class="section-header center">
+        <span class="section-label">📈 Evaluation Results</span>
+        <h2 class="section-title">Measurable<br /><span class="gradient-text">Performance Gains</span></h2>
+        <p class="section-subtitle center-text">
+          Evaluated on the BanglaRQA test set using standard NLP metrics.
+          Our fine-tuned model shows significant improvement across all benchmarks.
+        </p>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card glass-card" id="metric-f1">
+          <div class="metric-icon" style="color:var(--accent-teal);">🎯</div>
+          <div class="metric-label">F1 Score</div>
+          <div class="metric-comparison">
+            <div class="metric-bar-group">
+              <span class="metric-model-label">Base Model</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 34%; background: rgba(255,255,255,0.15);" data-value="34%"></div></div>
+              <span class="metric-val muted">34%</span>
+            </div>
+            <div class="metric-bar-group">
+              <span class="metric-model-label accent">Fine-tuned</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 67%; background: linear-gradient(90deg, var(--accent-teal), #00a8a0);" data-value="67%"></div></div>
+              <span class="metric-val">67%</span>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card glass-card" id="metric-rouge1">
+          <div class="metric-icon" style="color:var(--accent-gold);">📝</div>
+          <div class="metric-label">ROUGE-1</div>
+          <div class="metric-comparison">
+            <div class="metric-bar-group">
+              <span class="metric-model-label">Base Model</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 28%; background: rgba(255,255,255,0.15);" data-value="28%"></div></div>
+              <span class="metric-val muted">28%</span>
+            </div>
+            <div class="metric-bar-group">
+              <span class="metric-model-label accent">Fine-tuned</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 62%; background: linear-gradient(90deg, var(--accent-gold), #e0a800);" data-value="62%"></div></div>
+              <span class="metric-val gold">62%</span>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card glass-card" id="metric-rouge2">
+          <div class="metric-icon" style="color:var(--accent-purple);">📊</div>
+          <div class="metric-label">ROUGE-2</div>
+          <div class="metric-comparison">
+            <div class="metric-bar-group">
+              <span class="metric-model-label">Base Model</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 15%; background: rgba(255,255,255,0.15);" data-value="15%"></div></div>
+              <span class="metric-val muted">15%</span>
+            </div>
+            <div class="metric-bar-group">
+              <span class="metric-model-label accent">Fine-tuned</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 48%; background: linear-gradient(90deg, var(--accent-purple), #6025d0);" data-value="48%"></div></div>
+              <span class="metric-val purple">48%</span>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card glass-card" id="metric-meteor">
+          <div class="metric-icon" style="color:var(--accent-pink);">☄️</div>
+          <div class="metric-label">METEOR</div>
+          <div class="metric-comparison">
+            <div class="metric-bar-group">
+              <span class="metric-model-label">Base Model</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 22%; background: rgba(255,255,255,0.15);" data-value="22%"></div></div>
+              <span class="metric-val muted">22%</span>
+            </div>
+            <div class="metric-bar-group">
+              <span class="metric-model-label accent">Fine-tuned</span>
+              <div class="metric-bar-track"><div class="metric-bar" style="--fill: 54%; background: linear-gradient(90deg, var(--accent-pink), #c2185b);" data-value="54%"></div></div>
+              <span class="metric-val pink">54%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ────────────────────────────────────────────────── -->
+  <section class="cta-section" id="cta" aria-label="Call to action">
+    <div class="container cta-content">
+      <span class="section-label">🚀 Try It Now</span>
+      <h2 class="section-title">Experience Bengali AI<br /><span class="gradient-text">In Your Browser</span></h2>
+      <p>Chat with our fine-tuned Bengali LLM directly — no setup required.</p>
+      <a href="chat.html" class="btn-primary" id="cta-chat-btn">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        Open Chat Interface
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────── -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo" id="footer-logo">
+          <img src="../assets/cu-logo.png" alt="CU DSL Logo" style="width:38px;height:38px;border-radius:50%;border:2px solid var(--accent-teal);" />
+          <div class="nav-logo-text">
+            <span>Bengali LLM</span>
+            <span>CU Data Science Lab</span>
+          </div>
+        </a>
+        <p>A research initiative to advance Bengali language understanding using state-of-the-art large language model fine-tuning techniques.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Project</h4>
+        <ul>
+          <li><a href="#about"      id="footer-about">About</a></li>
+          <li><a href="#datasets"   id="footer-datasets">Datasets</a></li>
+          <li><a href="#comparison" id="footer-comparison">Comparison</a></li>
+          <li><a href="#metrics"    id="footer-metrics">Metrics</a></li>
+          <li><a href="chat.html"   id="footer-chat">Chat Interface</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Research</h4>
+        <ul>
+          <li><a href="#" id="footer-paper">Research Paper</a></li>
+          <li><a href="#" id="footer-hf">HuggingFace Model</a></li>
+          <li><a href="#" id="footer-github">GitHub Repository</a></li>
+          <li><a href="#" id="footer-demo">Live Demo</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Institution</h4>
+        <ul>
+          <li><a href="https://www.caluniv.ac.in/academic/akcsit/AKC.html" target="_blank" rel="noopener" id="footer-cu">Calcutta University</a></li>
+          <li><a href="https://www.caluniv.ac.in/academic/akcsit/AKC.html" target="_blank" rel="noopener" id="footer-dsl">Data Science Lab</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Calcutta University Data Science Lab. All rights reserved.</p>
+      <div class="footer-badges">
+        <span class="badge">🔬 Research</span>
+        <span class="badge">🏛️ Academia</span>
+        <span class="badge">🤖 Bengali NLP</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="../scripts/landing.js"></script>
+</body>
+</html>
