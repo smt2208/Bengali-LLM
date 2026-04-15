@@ -6,7 +6,8 @@
 'use strict';
 
 // ─── Backend Configuration ──────────────────────────────────
-// Default: same machine. Change to production URL when deployed.
+// ↓ UPDATE this to your Render URL when deploying to production
+// e.g. 'https://bengali-llm-backend.onrender.com'
 const BACKEND_BASE = localStorage.getItem('backend_base') || 'http://localhost:8000';
 
 // thread_id — unique per browser session, persists across page reloads

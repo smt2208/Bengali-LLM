@@ -1,0 +1,32 @@
+# ============================================================
+#  Render deployment config for Bengali LLM Backend
+# ============================================================
+
+services:
+  - type: web
+    name: bengali-llm-backend
+    runtime: python
+    rootDir: backend          # tells Render to look inside /backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free                # free tier (512 MB RAM, ~750 hrs/month)
+
+    envVars:
+      # ── Required ────────────────────────────────────────────
+      - key: COLAB_ENDPOINT
+        value: https://your-static-ngrok-domain.ngrok-free.app/generate  # update after Colab runs
+
+      # ── Optional overrides ──────────────────────────────────
+      - key: SQLITE_DB_PATH
+        value: ./db/conversations.db
+
+      - key: REQUEST_TIMEOUT
+        value: "90"
+
+      - key: MAX_HISTORY_PAIRS
+        value: "5"
+
+      # ── CORS: add your frontend domain here ─────────────────
+      # e.g. https://smt2208.github.io or https://your-site.netlify.app
+      - key: ALLOWED_ORIGINS
+        value: https://smt2208.github.io,http://localhost:3457
