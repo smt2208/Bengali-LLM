@@ -1,16 +1,14 @@
 /* ============================================================
    Bengali LLM — Chat Interface JavaScript
-   Multi-conversation support with proper state isolation
+   Clean version — settings panel removed, backend URL hardcoded
    ============================================================ */
 
 'use strict';
 
 // ─── Backend Configuration ──────────────────────────────────
-const BACKEND_BASE = localStorage.getItem('backend_base') || 'https://bengali-llm-backend.onrender.com';
+const BACKEND_BASE = 'https://bengali-llm-backend.onrender.com';
 
 // ─── Per-conversation state ──────────────────────────────────
-// Each conversation is fully isolated: its own threadId, messages, label
-// conversations[id] = { threadId, label, messages: [{role, content, time, isError}] }
 let activeConvoId = 1;
 let nextConvoId   = 2;
 const conversations = {
@@ -30,73 +28,9 @@ const sendBtn         = document.getElementById('send-btn');
 const chatWelcome     = document.getElementById('chat-welcome');
 const clearChatBtn    = document.getElementById('clear-chat-btn');
 const newChatBtn      = document.getElementById('new-chat-btn');
-const settingsBtn     = document.getElementById('settings-btn');
-const apiPanel        = document.getElementById('api-config-panel');
-const apiPanelClose   = document.getElementById('api-panel-close');
-const saveConfigBtn   = document.getElementById('save-config-btn');
-const configSavedMsg  = document.getElementById('config-saved-msg');
 const sidebarList     = document.getElementById('sidebar-list');
 const modelStatusText = document.getElementById('model-status-text');
 const toolbarClearBtn = document.getElementById('toolbar-clear-btn');
-const apiEndpointInput  = document.getElementById('api-endpoint');
-const apiKeyInput       = document.getElementById('api-key');
-const reqFormatSelect   = document.getElementById('req-format');
-const resPathInput      = document.getElementById('res-path');
-const temperatureSlider = document.getElementById('temperature');
-const maxTokensSlider   = document.getElementById('max-tokens');
-const systemPromptTA    = document.getElementById('system-prompt');
-const tempValSpan       = document.getElementById('temp-val');
-const tokensValSpan     = document.getElementById('tokens-val');
-
-// ─── Settings panel ──────────────────────────────────────────
-const initConfigPanel = () => {
-  apiEndpointInput.value     = localStorage.getItem('backend_base') || BACKEND_BASE;
-  apiKeyInput.value          = '';
-  reqFormatSelect.value      = 'json_message';
-  resPathInput.value         = 'response';
-  temperatureSlider.value    = 0.7;
-  maxTokensSlider.value      = 512;
-  systemPromptTA.value       = '(System prompt is configured in the Colab inference server)';
-  tempValSpan.textContent    = '0.7';
-  tokensValSpan.textContent  = '512';
-  const epLabel = document.querySelector('label[for="api-endpoint"]');
-  if (epLabel) epLabel.textContent = 'Backend URL (LangGraph)';
-};
-initConfigPanel();
-
-temperatureSlider.addEventListener('input', () => {
-  tempValSpan.textContent = parseFloat(temperatureSlider.value).toFixed(1);
-});
-maxTokensSlider.addEventListener('input', () => {
-  tokensValSpan.textContent = parseInt(maxTokensSlider.value);
-});
-
-saveConfigBtn.addEventListener('click', async () => {
-  const newBase = apiEndpointInput.value.trim().replace(/\/$/, '');
-  localStorage.setItem('backend_base', newBase);
-  const colabUrl = apiKeyInput.value.trim();
-  if (colabUrl.startsWith('https://')) {
-    try {
-      await fetch(`${newBase}/api/config/endpoint`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: `${colabUrl}/generate` }),
-      });
-    } catch (_) { /* non-critical */ }
-  }
-  configSavedMsg.classList.add('show');
-  modelStatusText.textContent = 'Configured';
-  setTimeout(() => configSavedMsg.classList.remove('show'), 2500);
-});
-
-settingsBtn.addEventListener('click', () => {
-  apiPanel.classList.add('open');
-  apiEndpointInput.focus();
-});
-apiPanelClose.addEventListener('click', () => apiPanel.classList.remove('open'));
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') apiPanel.classList.remove('open');
-});
 
 // ─── Language toggle ─────────────────────────────────────────
 const langBtns = document.querySelectorAll('.lang-btn');
@@ -175,7 +109,7 @@ const hideWelcome = () => {
   }
 };
 
-// ─── Render a single message bubble into DOM ──────────────────
+// ─── Render a single message bubble ──────────────────────────
 const appendMessageBubble = (role, content, time, isError = false) => {
   const id = `msg-${++msgCounter}`;
   const isUser = role === 'user';
@@ -198,36 +132,27 @@ const appendMessageBubble = (role, content, time, isError = false) => {
   return el;
 };
 
-// ─── Render ALL stored messages for a given conversation ──────
-// This is what makes switching chats work correctly!
+// ─── Render all messages for a conversation ───────────────────
 const renderConversation = (convoId) => {
-  // Clear ALL message bubbles from DOM first
   msgContainer.querySelectorAll('.message').forEach(m => m.remove());
-
   const convo = conversations[convoId];
   if (!convo || convo.messages.length === 0) {
     showWelcome();
     return;
   }
-
-  // Hide welcome, then re-render every stored message
-  if (chatWelcome) {
-    chatWelcome.style.display = 'none';
-    chatWelcome.style.opacity = '0';
-  }
+  if (chatWelcome) { chatWelcome.style.display = 'none'; chatWelcome.style.opacity = '0'; }
   convo.messages.forEach(({ role, content, time, isError }) => {
     appendMessageBubble(role, content, time, isError || false);
   });
   scrollToBottom();
 };
 
-// ─── Switch to a different conversation ──────────────────────
+// ─── Switch conversation ──────────────────────────────────────
 const switchConversation = (convoId) => {
-  if (convoId === activeConvoId && !isLoading) return;
+  if (convoId === activeConvoId) return;
   activeConvoId = convoId;
   renderConversation(convoId);
   renderSidebar();
-  // Reset input state
   chatInput.value = '';
   chatInput.style.height = 'auto';
   sendBtn.disabled = true;
@@ -245,9 +170,7 @@ const showTyping = () => {
     <div class="message-body">
       <div class="message-role">Bengali LLM</div>
       <div class="typing-indicator" aria-label="Bengali LLM is typing">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
       </div>
     </div>
   `;
@@ -263,19 +186,15 @@ const handleSend = async () => {
   const text = chatInput.value.trim();
   if (!text || isLoading) return;
 
-  const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
   const convo = conversations[activeConvoId];
-
   hideWelcome();
   isLoading = true;
   sendBtn.disabled = true;
 
-  // Store + render user message immediately
   const userTime = now();
   convo.messages.push({ role: 'user', content: text, time: userTime });
   appendMessageBubble('user', text, userTime);
 
-  // Set sidebar label from first message (like ChatGPT)
   if (convo.label === 'New Conversation') {
     convo.label = text.slice(0, 35) + (text.length > 35 ? '…' : '');
     renderSidebar();
@@ -286,7 +205,7 @@ const handleSend = async () => {
   showTyping();
 
   try {
-    const res = await fetch(`${base}/api/chat`, {
+    const res = await fetch(`${BACKEND_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -303,28 +222,21 @@ const handleSend = async () => {
     }
 
     const data = await res.json();
-
-    // Bind thread_id to THIS conversation only
-    if (data.thread_id && !convo.threadId) {
-      convo.threadId = data.thread_id;
-    }
+    if (data.thread_id && !convo.threadId) convo.threadId = data.thread_id;
 
     const replyTime = now();
     convo.messages.push({ role: 'assistant', content: data.response, time: replyTime });
     appendMessageBubble('assistant', data.response, replyTime);
     scrollToBottom();
-    renderSidebar(); // update message count in sidebar
+    renderSidebar();
     modelStatusText.textContent = 'Connected';
 
   } catch (err) {
     removeTyping();
     const errTime = now();
-    let errMsg;
-    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-      errMsg = '⚠️ Cannot reach the backend server. Make sure it is running at ' + base;
-    } else {
-      errMsg = `Error: ${err.message}`;
-    }
+    const errMsg = err.message.includes('Failed to fetch') || err.message.includes('NetworkError')
+      ? '⚠️ Cannot reach the backend. Please try again in a moment.'
+      : `Error: ${err.message}`;
     convo.messages.push({ role: 'assistant', content: errMsg, time: errTime, isError: true });
     appendMessageBubble('assistant', errMsg, errTime, true);
     modelStatusText.textContent = 'Error';
@@ -336,18 +248,16 @@ const handleSend = async () => {
   }
 };
 
-// ─── Clear current chat ───────────────────────────────────────
+// ─── Clear chat ───────────────────────────────────────────────
 const clearCurrentChat = async () => {
   const convo = conversations[activeConvoId];
   if (convo.threadId) {
-    const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
-    try {
-      await fetch(`${base}/api/history/${convo.threadId}`, { method: 'DELETE' });
-    } catch (_) { /* non-critical */ }
+    try { await fetch(`${BACKEND_BASE}/api/history/${convo.threadId}`, { method: 'DELETE' }); }
+    catch (_) { /* non-critical */ }
   }
-  convo.threadId  = null;
-  convo.messages  = [];
-  convo.label     = 'New Conversation';
+  convo.threadId = null;
+  convo.messages = [];
+  convo.label    = 'New Conversation';
   msgContainer.querySelectorAll('.message').forEach(m => m.remove());
   showWelcome();
   chatInput.value = '';
@@ -359,9 +269,7 @@ const clearCurrentChat = async () => {
 
 clearChatBtn.addEventListener('click', () => {
   if ((conversations[activeConvoId]?.messages.length || 0) === 0) return;
-  if (confirm('Clear this conversation? This also removes it from the backend history.')) {
-    clearCurrentChat();
-  }
+  if (confirm('Clear this conversation? This also removes it from the backend history.')) clearCurrentChat();
 });
 
 // ─── New Chat ─────────────────────────────────────────────────
@@ -374,16 +282,12 @@ newChatBtn.addEventListener('click', () => {
 // ─── Sidebar ──────────────────────────────────────────────────
 const renderSidebar = () => {
   sidebarList.innerHTML = '';
-
   const groupLabel = document.createElement('div');
   groupLabel.className = 'sidebar-group-label';
   groupLabel.textContent = 'Conversations';
   sidebarList.appendChild(groupLabel);
 
-  // Show newest conversation first (like all modern chat apps)
-  const ids = Object.keys(conversations).map(Number).reverse();
-
-  ids.forEach(id => {
+  Object.keys(conversations).map(Number).reverse().forEach(id => {
     const convo = conversations[id];
     const el = document.createElement('div');
     el.classList.add('sidebar-item');
@@ -392,18 +296,14 @@ const renderSidebar = () => {
     el.setAttribute('id', `convo-${id}`);
     el.setAttribute('tabindex', '0');
     el.setAttribute('data-convo', id);
-
     const msgCount = convo.messages.length;
     el.innerHTML = `
       <div class="sidebar-item-icon">💬</div>
       <div class="sidebar-item-text"><span>${escapeHtml(convo.label)}</span></div>
       <span class="sidebar-item-time">${msgCount > 0 ? `${msgCount} msg${msgCount > 1 ? 's' : ''}` : 'Empty'}</span>
     `;
-
     el.addEventListener('click', () => switchConversation(id));
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') switchConversation(id);
-    });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') switchConversation(id); });
     sidebarList.appendChild(el);
   });
 };
@@ -427,16 +327,14 @@ document.addEventListener('click', (e) => {
 renderSidebar();
 showWelcome();
 
-// Health check
 (async () => {
-  const base = (localStorage.getItem('backend_base') || BACKEND_BASE).replace(/\/$/, '');
   try {
-    const res = await fetch(`${base}/api/health`, { signal: AbortSignal.timeout(4000) });
+    const res = await fetch(`${BACKEND_BASE}/api/health`, { signal: AbortSignal.timeout(5000) });
     modelStatusText.textContent = res.ok ? 'Connected' : 'Backend error';
     if (res.ok) console.log('%c Bengali LLM Backend connected ✅', 'color:#00d4c8;font-weight:bold;');
   } catch (_) {
-    modelStatusText.textContent = 'Offline — start backend';
-    console.warn('Backend not reachable at', base);
+    modelStatusText.textContent = 'Offline';
+    console.warn('Backend not reachable at', BACKEND_BASE);
   }
 })();
 

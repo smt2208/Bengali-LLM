@@ -35,9 +35,6 @@
       <button class="chat-action-btn" id="clear-chat-btn" aria-label="Clear conversation">
         🗑️ <span>Clear</span>
       </button>
-      <button class="chat-action-btn" id="settings-btn" aria-label="Open API settings">
-        ⚙️ <span>Settings</span>
-      </button>
     </div>
   </div>
 </nav>
@@ -144,83 +141,8 @@
   </main>
 </div>
 
-<!-- ── API Settings Panel ─────────────────────────────────── -->
-<aside class="api-config-panel" id="api-config-panel" aria-label="API Settings" role="dialog" aria-modal="true">
-  <div class="api-panel-header">
-    <h3>⚙️ API Settings</h3>
-    <button class="api-panel-close" id="api-panel-close" aria-label="Close settings">✕</button>
-  </div>
-  <div class="api-panel-body">
 
-    <div class="field-group">
-      <label for="api-endpoint">API Endpoint</label>
-      <input
-        type="url"
-        id="api-endpoint"
-        placeholder="http://localhost:8000/generate"
-        value=""
-        autocomplete="off"
-        spellcheck="false"
-      />
-    </div>
 
-    <div class="field-group">
-      <label for="api-key">API Key (optional)</label>
-      <input
-        type="password"
-        id="api-key"
-        placeholder="Bearer token or API key"
-        autocomplete="off"
-      />
-    </div>
-
-    <div class="field-group">
-      <label for="req-format">Request Format</label>
-      <select id="req-format">
-        <option value="json_message">{ "message": "..." }</option>
-        <option value="json_prompt">{ "prompt": "..." }</option>
-        <option value="json_input">{ "input": "..." }</option>
-        <option value="json_text">{ "text": "..." }</option>
-        <option value="json_query">{ "query": "..." }</option>
-      </select>
-    </div>
-
-    <div class="field-group">
-      <label for="res-path">Response JSON Path</label>
-      <input
-        type="text"
-        id="res-path"
-        placeholder="e.g. response OR choices[0].message.content"
-        value="response"
-      />
-    </div>
-
-    <div class="field-group">
-      <label>Temperature</label>
-      <div class="slider-row">
-        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" aria-label="Temperature" />
-        <span class="slider-val" id="temp-val">0.7</span>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <label>Max Tokens</label>
-      <div class="slider-row">
-        <input type="range" id="max-tokens" min="64" max="2048" step="64" value="512" aria-label="Max tokens" />
-        <span class="slider-val" id="tokens-val">512</span>
-      </div>
-    </div>
-
-    <div class="field-group">
-      <label for="system-prompt">System Prompt</label>
-      <textarea id="system-prompt" rows="4" placeholder="You are a helpful Bengali language assistant developed by Calcutta University Data Science Lab...">You are a helpful Bengali language assistant developed by Calcutta University Data Science Lab. You excel at understanding and generating Bengali text. Answer in the same language as the user's question.</textarea>
-    </div>
-
-    <button class="save-config-btn" id="save-config-btn">💾 Save Configuration</button>
-    <div class="config-saved-msg" id="config-saved-msg">✅ Configuration saved!</div>
-
-  </div>
-</aside>
 
 <script src="../scripts/chat.js"></script>
 </body>
